@@ -1,0 +1,206 @@
+# Copyright 2013 The Flutter Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("fml") {
+  sources = [
+    "arraysize.h",
+    "base32.cc",
+    "base32.h",
+    "build_config.h",
+    "closure.h",
+    "command_line.cc",
+    "command_line.h",
+    "compiler_specific.h",
+    "eintr_wrapper.h",
+    "export.h",
+    "file.cc",
+    "file.h",
+    "icu_util.cc",
+    "icu_util.h",
+    "log_level.h",
+    "log_settings.cc",
+    "log_settings.h",
+    "log_settings_state.cc",
+    "logging.cc",
+    "logging.h",
+    "make_copyable.h",
+    "mapping.cc",
+    "mapping.h",
+    "memory/ref_counted.h",
+    "memory/ref_counted_internal.h",
+    "memory/ref_ptr.h",
+    "memory/ref_ptr_internal.h",
+    "memory/thread_checker.h",
+    "memory/weak_ptr.h",
+    "memory/weak_ptr_internal.cc",
+    "memory/weak_ptr_internal.h",
+    "message.cc",
+    "message.h",
+    "message_loop.cc",
+    "message_loop.h",
+    "message_loop_impl.cc",
+    "message_loop_impl.h",
+    "native_library.h",
+    "paths.cc",
+    "paths.h",
+    "string_view.cc",
+    "string_view.h",
+    "synchronization/atomic_object.h",
+    "synchronization/count_down_latch.cc",
+    "synchronization/count_down_latch.h",
+    "synchronization/shared_mutex.h",
+    "synchronization/thread_annotations.h",
+    "synchronization/thread_checker.h",
+    "synchronization/waitable_event.cc",
+    "synchronization/waitable_event.h",
+    "task_runner.cc",
+    "task_runner.h",
+    "thread.cc",
+    "thread.h",
+    "thread_local.cc",
+    "thread_local.h",
+    "time/time_delta.h",
+    "time/time_point.cc",
+    "time/time_point.h",
+    "trace_event.cc",
+    "trace_event.h",
+    "unique_fd.cc",
+    "unique_fd.h",
+    "unique_object.h",
+  ]
+
+  public_deps = []
+
+  deps = [
+    "//third_party/dart/runtime:dart_api",
+
+    # These need to be in sync with the Fuchsia buildroot.
+    "//third_party/icu",
+  ]
+
+  configs += [ "//third_party/icu:icu_config" ]
+
+  public_configs = [ "$flutter_root:config" ]
+
+  libs = []
+
+  if (is_ios || is_mac) {
+    sources += [ "platform/posix/shared_mutex_posix.cc" ]
+  } else {
+    sources += [ "synchronization/shared_mutex_std.cc" ]
+  }
+
+  if (is_ios || is_mac) {
+    sources += [
+      "platform/darwin/cf_utils.cc",
+      "platform/darwin/cf_utils.h",
+      "platform/darwin/message_loop_darwin.h",
+      "platform/darwin/message_loop_darwin.mm",
+      "platform/darwin/paths_darwin.mm",
+      "platform/darwin/platform_version.h",
+      "platform/darwin/platform_version.mm",
+      "platform/darwin/scoped_block.h",
+      "platform/darwin/scoped_block.mm",
+      "platform/darwin/scoped_nsobject.h",
+      "platform/darwin/scoped_nsobject.mm",
+    ]
+
+    libs += [ "Foundation.framework" ]
+  }
+
+  if (is_android) {
+    sources += [
+      "platform/android/jni_util.cc",
+      "platform/android/jni_util.h",
+      "platform/android/jni_weak_ref.cc",
+      "platform/android/jni_weak_ref.h",
+      "platform/android/message_loop_android.cc",
+      "platform/android/message_loop_android.h",
+      "platform/android/paths_android.cc",
+      "platform/android/paths_android.h",
+      "platform/android/scoped_java_ref.cc",
+      "platform/android/scoped_java_ref.h",
+    ]
+
+    libs += [ "android" ]
+  }
+
+  if (is_android) {
+    # Don't filter away these Linux sources on Android.
+    set_sources_assignment_filter([])
+    sources += [
+      "platform/linux/timerfd.cc",
+      "platform/linux/timerfd.h",
+    ]
+    set_sources_assignment_filter(sources_assignment_filter)
+  }
+
+  if (is_linux) {
+    sources += [
+      "platform/linux/message_loop_linux.cc",
+      "platform/linux/message_loop_linux.h",
+      "platform/linux/paths_linux.cc",
+      "platform/linux/timerfd.cc",
+      "platform/linux/timerfd.h",
+    ]
+  }
+
+  if (is_fuchsia) {
+    sources += [ "platform/fuchsia/paths_fuchsia.cc" ]
+
+    public_deps += [ "//zircon/public/lib/trace-provider" ]
+  }
+
+  if (is_win) {
+    sources += [
+      "platform/win/errors_win.cc",
+      "platform/win/errors_win.h",
+      "platform/win/file_win.cc",
+      "platform/win/mapping_win.cc",
+      "platform/win/message_loop_win.cc",
+      "platform/win/message_loop_win.h",
+      "platform/win/native_library_win.cc",
+      "platform/win/paths_win.cc",
+      "platform/win/wstring_conversion.h",
+    ]
+  } else {
+    sources += [
+      "platform/posix/file_posix.cc",
+      "platform/posix/mapping_posix.cc",
+      "platform/posix/native_library_posix.cc",
+      "platform/posix/paths_posix.cc",
+    ]
+  }
+}
+
+executable("fml_unittests") {
+  testonly = true
+
+  sources = [
+    "base32_unittest.cc",
+    "command_line_unittest.cc",
+    "file_unittest.cc",
+    "memory/ref_counted_unittest.cc",
+    "memory/weak_ptr_unittest.cc",
+    "message_loop_unittests.cc",
+    "message_unittests.cc",
+    "paths_unittests.cc",
+    "string_view_unittest.cc",
+    "synchronization/count_down_latch_unittests.cc",
+    "synchronization/thread_annotations_unittest.cc",
+    "synchronization/thread_checker_unittest.cc",
+    "synchronization/waitable_event_unittest.cc",
+    "thread_local_unittests.cc",
+    "thread_unittests.cc",
+    "time/time_delta_unittest.cc",
+    "time/time_point_unittest.cc",
+    "time/time_unittest.cc",
+  ]
+
+  deps = [
+    "$flutter_root/fml",
+    "$flutter_root/testing",
+    "//third_party/dart/runtime:libdart_jit",
+  ]
+}
